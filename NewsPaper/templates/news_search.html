@@ -1,0 +1,77 @@
+{% extends 'flatpages/default.html' %}
+
+{% load custom_filters %}
+
+{% block title %}
+Post
+{% endblock title %}
+
+{% block content %}
+    <h1>Поиск новостей/статей</h1>
+
+    {# Добавляем форму, которая объединяет набор полей, которые будут отправляться в запросе #}
+    <form action="" method="get">
+        {# Переменная, которую мы передали через контекст, может сгенерировать нам форму с полями #}
+        {{ filterset.form.as_p }}
+        {# Добавим кнопку отправки данных формы #}
+        <input type="submit" value="Найти" />
+    </form>
+    <hr>
+    {% if news_list %}
+        <table>
+            <tr>
+                <td>Заголовок</td>
+                <td>Категории</td>
+                <td>Дата публикации</td>
+                <td>Текст</td>
+            </tr>
+
+            {% for news_detail in news_list %}
+            <tr>
+                <td>{{ news_detail.title|censor }}</td>
+                <td>
+                    {% for category in news_detail.categories.all %}
+                        <a href="{% url 'category_list' category.id %}">{{ category }}</a>
+                    {% endfor %}
+                </td>
+                <td>{{ news_detail.creation_time|date:'d M Y' }}</td>
+                <td>{{ news_detail.text|truncatewords:20|censor }}</td>
+            </tr>
+            {% endfor %}
+
+        </table>
+    {% else %}
+        <h2>Новостей нет!</h2>
+    {% endif %}
+
+   {# Добавляем пагинацию на страницу #}
+
+   {# Информация о предыдущих страницах #}
+   {% if page_obj.has_previous %}
+       <a href="?page=1">1</a>
+       {% if page_obj.previous_page_number != 1 %}
+           ...
+           <a href="?page={{ page_obj.previous_page_number }}">{{ page_obj.previous_page_number }}</a>
+       {% endif %}
+   {% endif %}
+
+   {# Информация о текущей странице #}
+   {{ page_obj.number }}
+
+   {# Информация о следующих страницах #}
+   {% if page_obj.has_next %}
+       <a href="?page={{ page_obj.next_page_number }}">{{ page_obj.next_page_number }}</a>
+       {% if paginator.num_pages != page_obj.next_page_number %}
+           ...
+           <a href="?page={{ page_obj.paginator.num_pages }}">{{ page_obj.paginator.num_pages }}</a>
+       {% endif %}
+   {% endif %}
+{% if request.user.is_authenticated %}
+    <h2>Страница авторизованного пользователя {{request.user.username}}</h2>
+    <button> <a href="{% url 'account_logout' %}">Выйти</a> </button>
+{% else %}
+    <h2>Вы не вошли в систему!</h2>
+    <button> <a href="{% url 'account_login' %}">Войти</a> </button>
+{% endif %}
+
+{% endblock content %}
